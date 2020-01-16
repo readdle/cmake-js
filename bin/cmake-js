@@ -28,9 +28,12 @@ console.log(process.argv);
 
 var yargs = require("yargs")
     .usage("CMake.js " + version + "\n\nUsage: $0 [<command>] [options]")
-    .version(function () {
-        return version;
+    .parserConfiguration({
+        'dot-notation': false
     })
+    .version((function () {
+        return version;
+    })())
     .command("install", "Install Node.js/io.js distribution files if needed")
     .command("configure", "Configure CMake project")
     .command("print-configure", "Print the configuration command")
@@ -147,6 +150,11 @@ var yargs = require("yargs")
             describe: "Custom argument passed to CMake in format: -D<your-arg-here>",
             type: "string"
         },
+        "CC": {
+            demand: false,
+            describe: "Cache preload script passed to CMake in format: -C<your-arg-here>",
+            type: "string"
+        },
         i: {
             alias: "silent",
             describe: "Prevents CMake.js to print to the stdio",
@@ -182,8 +190,13 @@ log.verbose("CON", "Parsing arguments");
 // Extract custom cMake options
 var customOptions = {};
 _.keys(argv).forEach(function (key) {
-    if (argv[key] && _.startsWith(key, "CD")) {
-        customOptions[key.substr(2)] = argv[key];
+    if (argv[key]) { 
+        if (_.startsWith(key, "CD")) {
+            customOptions[key.substr(2)] = argv[key];
+        }
+        else if (_.startsWith(key, "CC")) {
+            customOptions[key.substr(2)] = { isCache: true };
+        }
     }
 });
 
